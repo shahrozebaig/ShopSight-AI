@@ -9,3 +9,5 @@ transformers
 opencv-python
 numpy
 groq
+python-multipart
+faster-whisper

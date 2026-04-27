@@ -1,11 +1,10 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from app.services.llm_service import apply_filters
+from app.services.llm_service import chat_with_ai
 router = APIRouter()
 class ChatRequest(BaseModel):
-    query: str
-    products: list
+    message: str
 @router.post("/")
 async def chat(req: ChatRequest):
-    response = apply_filters(req.query, req.products)
+    response = chat_with_ai(req.message)
     return {"response": response}

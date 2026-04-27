@@ -1,18 +1,27 @@
 from fastapi import APIRouter, UploadFile, File
-import tempfile
-from app.services.embedding_service import get_image_query
-from app.services.serp_service import search_products
-from app.services.fusion_service import fuse_results
+import requests
+from app.core.config import IMGBB_API_KEY, SERP_API_KEY
 router = APIRouter()
 @router.post("/")
 async def search_image(file: UploadFile = File(...)):
-    with tempfile.NamedTemporaryFile(delete=False) as tmp:
-        tmp.write(await file.read())
-        tmp_path = tmp.name
-    query = get_image_query(tmp_path)
-    products = search_products(query)
-    final = fuse_results(products)
-    return {
-        "query": query,
-        "results": final
+    image_bytes = await file.read()
+    imgbb_url = "https://api.imgbb.com/1/upload"
+    files = {
+        "image": image_bytes
     }
+    data = {
+        "key": IMGBB_API_KEY
+    }
+    imgbb_res = requests.post(imgbb_url, data=data, files=files).json()
+    print("IMGBB RESPONSE:", imgbb_res)
+    if "data" not in imgbb_res:
+        return {"error": "ImgBB upload failed", "response": imgbb_res}
+    image_url = imgbb_res["data"]["url"]
+    serp_url = "https://serpapi.com/search"
+    params = {
+        "engine": "google_lens",
+        "api_key": SERP_API_KEY,
+        "url": image_url
+    }
+    response = requests.get(serp_url, params=params)
+    return response.json()
