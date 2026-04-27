@@ -10,8 +10,14 @@ def search_products(image_url: str):
     response = requests.get(url, params=params)
     data = response.json()
     products = []
-    for item in data.get("visual_matches", [])[:5]:
+    for item in data.get("visual_matches", [])[:10]:
         title = item.get("title")
+        link = item.get("link")
+        if not link:
+            continue
+        link_lower = link.lower()
+        if any(x in link_lower for x in ["youtube", "reddit", "review", "watch"]):
+            continue
         price = None
         rating = 0
         if title:
@@ -30,7 +36,7 @@ def search_products(image_url: str):
                 rating = first.get("rating", 0)
         products.append({
             "title": title,
-            "link": item.get("link"),
+            "link": link,
             "thumbnail": item.get("thumbnail"),
             "price": price,
             "rating": rating
