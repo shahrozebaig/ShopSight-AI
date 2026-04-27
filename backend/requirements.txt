@@ -11,4 +11,3 @@ numpy
 groq
 python-multipart
 faster-whisper
-google-generativeai

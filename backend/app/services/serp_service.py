@@ -1,51 +1,38 @@
 import requests
 from app.core.config import SERP_API_KEY
-
-def search_products(query: str):
+def search_products(image_url: str):
     url = "https://serpapi.com/search"
-
-    # 🔥 1. SHOPPING (for price, image, rating)
-    shop_params = {
-        "engine": "google",
-        "tbm": "shop",
-        "q": query,
-        "api_key": SERP_API_KEY,
-        "gl": "in",
-        "hl": "en"
+    params = {
+        "engine": "google_lens",
+        "url": image_url,
+        "api_key": SERP_API_KEY
     }
-
-    shop_res = requests.get(url, params=shop_params).json()
-
+    response = requests.get(url, params=params)
+    data = response.json()
     products = []
-
-    for item in shop_res.get("shopping_results", [])[:5]:
+    for item in data.get("visual_matches", [])[:5]:
+        title = item.get("title")
+        price = None
+        rating = 0
+        if title:
+            shop_params = {
+                "engine": "google",
+                "tbm": "shop",
+                "q": title,
+                "api_key": SERP_API_KEY,
+                "gl": "in",
+                "hl": "en"
+            }
+            shop_res = requests.get(url, params=shop_params).json()
+            if shop_res.get("shopping_results"):
+                first = shop_res["shopping_results"][0]
+                price = first.get("price")
+                rating = first.get("rating", 0)
         products.append({
-            "title": item.get("title"),
-            "price": item.get("price"),
-            "rating": item.get("rating", 0),
-            "image": item.get("thumbnail"),
-            "link": None   # will fill next
+            "title": title,
+            "link": item.get("link"),
+            "thumbnail": item.get("thumbnail"),
+            "price": price,
+            "rating": rating
         })
-
-    # 🔥 2. ORGANIC (for REAL LINKS)
-    org_params = {
-        "engine": "google",
-        "q": query,
-        "api_key": SERP_API_KEY,
-        "gl": "in",
-        "hl": "en"
-    }
-
-    org_res = requests.get(url, params=org_params).json()
-
-    real_links = [
-        item.get("link")
-        for item in org_res.get("organic_results", [])
-        if item.get("link")
-    ]
-
-    # 🔥 3. MERGE LINKS INTO PRODUCTS
-    for i in range(min(len(products), len(real_links))):
-        products[i]["link"] = real_links[i]
-
     return products

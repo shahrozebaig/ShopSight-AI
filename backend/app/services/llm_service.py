@@ -27,8 +27,7 @@ def generate_description(products):
     titles = [p["title"] for p in products[:3]]
     prompt = f"""
     Products: {titles}
-    Write only one short clean sentence describing them.
-    Do not list items do not use numbers do not use bullet points.
+    Write one short clean sentence describing them.
     """
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
