@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from app.services.llm_service import chat_with_ai
+from app.services.serp_service import search_products_text
 router = APIRouter()
 class ChatRequest(BaseModel):
     message: str
@@ -9,6 +10,8 @@ class ChatRequest(BaseModel):
 async def chat(req: ChatRequest):
     user_query = req.message.lower()
     products = req.products
+    if not products:
+        products = search_products_text(user_query)
     filtered = []
     for p in products:
         price = p.get("price", "")
@@ -31,6 +34,6 @@ async def chat(req: ChatRequest):
             filtered.append(p)
     ai_response = chat_with_ai(req.message)
     return {
-        "products": filtered,     
-        "response": ai_response    
+        "products": filtered,
+        "response": ai_response
     }

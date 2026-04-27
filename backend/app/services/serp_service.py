@@ -42,3 +42,25 @@ def search_products(image_url: str):
             "rating": rating
         })
     return products
+def search_products_text(query: str):
+    url = "https://serpapi.com/search"
+    params = {
+        "engine": "google",
+        "tbm": "shop",
+        "q": query,
+        "api_key": SERP_API_KEY,
+        "gl": "in",
+        "hl": "en"
+    }
+    response = requests.get(url, params=params)
+    data = response.json()
+    products = []
+    for item in data.get("shopping_results", [])[:5]:
+        products.append({
+            "title": item.get("title"),
+            "link": item.get("link"),
+            "thumbnail": item.get("thumbnail"),
+            "price": item.get("price"),
+            "rating": item.get("rating", 0)
+        })
+    return products

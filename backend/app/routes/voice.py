@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, File
 import tempfile
 import os
 from app.services.voice_service import speech_to_text
+from app.services.serp_service import search_products_text
 router = APIRouter()
 @router.post("/")
 async def voice(file: UploadFile = File(...)):
@@ -10,4 +11,8 @@ async def voice(file: UploadFile = File(...)):
         tmp_path = tmp.name
     text = speech_to_text(tmp_path)
     os.remove(tmp_path)
-    return {"query": text}
+    products = search_products_text(text)
+    return {
+        "query": text,
+        "products": products
+    }
