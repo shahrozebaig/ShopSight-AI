@@ -15,6 +15,6 @@ def search_products(query: str):
             "price": item.get("price"),
             "link": item.get("link"),
             "thumbnail": item.get("thumbnail"),
-            "rating": item.get("rating")
+            "rating": item.get("rating", 0)
         })
     return products
