@@ -20,16 +20,15 @@ def apply_filters(user_query, products):
         model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": prompt}]
     )
-
     return response.choices[0].message.content
 def generate_description(products):
     if not products:
         return ""
     titles = [p["title"] for p in products[:3]]
     prompt = f"""
-    These are shopping products:
-    {titles}
-    Give ONE short sentence describing them clearly.
+    Products: {titles}
+    Write only one short clean sentence describing them.
+    Do not list items do not use numbers do not use bullet points.
     """
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
