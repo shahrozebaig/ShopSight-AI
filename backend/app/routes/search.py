@@ -1,6 +1,8 @@
 from fastapi import APIRouter, UploadFile, File
 import requests
 from app.core.config import IMGBB_API_KEY, SERP_API_KEY
+from app.services.fusion_service import fuse_results
+from app.services.llm_service import generate_description
 router = APIRouter()
 @router.post("/")
 async def search_image(file: UploadFile = File(...)):
@@ -24,4 +26,11 @@ async def search_image(file: UploadFile = File(...)):
         "url": image_url
     }
     response = requests.get(serp_url, params=params)
-    return response.json()
+    data = response.json()
+    products = data.get("visual_matches", [])
+    final = fuse_results(products)
+    description = generate_description(final)
+    return {
+        "description": description,
+        "results": final
+    }
