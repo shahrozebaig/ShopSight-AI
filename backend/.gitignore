@@ -1,0 +1,49 @@
+# ENV FILES (IMPORTANT)
+.env
+.env.*
+*.env
+
+# PYTHON (BACKEND)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# AI / ML FILES
+# Model weights / cache
+*.pt
+*.pth
+*.bin
+*.h5
+
+# HuggingFace / Torch cache
+.cache/
+models/
+
+# ⚙️ IDE / EDITOR
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# DEPLOYMENT
+.vercel/
+.render/
+
+# UPLOADS (if any)
+uploads/
+temp/

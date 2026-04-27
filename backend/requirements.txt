@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+python-dotenv
+google-search-results
+pillow
+requests
+torch
+transformers
+opencv-python
+numpy
+groq
