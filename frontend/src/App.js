@@ -7,11 +7,13 @@ import { sendChat } from "./services/api";
 function App() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [description, setDescription] = useState(""); 
   const handleVoiceText = async (text) => {
     try {
       setLoading(true);
-      const res = await sendChat(text); 
+      const res = await sendChat(text);
       if (res.products) setProducts(res.products);
+      if (res.response) setDescription(res.response); 
     } catch (e) {
       console.error(e);
     } finally {
@@ -44,7 +46,11 @@ function App() {
             <h3 className="font-semibold text-lg mb-4">
               Image Search
             </h3>
-            <UploadBox setProducts={setProducts} setLoading={setLoading} />
+            <UploadBox
+              setProducts={setProducts}
+              setLoading={setLoading}
+              setDescription={setDescription} 
+            />
           </div>
           <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition">
             <h3 className="font-semibold text-lg mb-4">
@@ -59,7 +65,14 @@ function App() {
             </div>
           </div>
         </div>
-        <div className="mt-12">
+        {description && (
+          <div className="mt-8 bg-white border rounded-2xl p-4 shadow-sm">
+            <p className="text-sm text-gray-700">
+              {description}
+            </p>
+          </div>
+        )}
+        <div className="mt-10">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold text-gray-900">
               Results

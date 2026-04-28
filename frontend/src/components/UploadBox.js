@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { uploadImage } from "../services/api";
-export default function UploadBox({ setProducts, setLoading }) {
+export default function UploadBox({ setProducts, setLoading, setDescription }) {
   const [file, setFile] = useState(null);
   const handleUpload = async () => {
     if (!file) return;
@@ -8,6 +8,7 @@ export default function UploadBox({ setProducts, setLoading }) {
       setLoading(true);
       const data = await uploadImage(file);
       setProducts(data.results || []);
+      setDescription(data.description || ""); 
     } catch {
       alert("Upload failed");
     } finally {
