@@ -10,13 +10,15 @@ def search_products(image_url: str):
     response = requests.get(url, params=params)
     data = response.json()
     products = []
-    for item in data.get("visual_matches", [])[:10]:
+    for item in data.get("visual_matches", [])[:5]:   # 🔥 ONLY 5
         title = item.get("title")
-        link = item.get("link")
+        link = item.get("link") or item.get("product_link")
         if not link:
             continue
         link_lower = link.lower()
-        if any(x in link_lower for x in ["youtube", "reddit", "review", "watch"]):
+        if any(x in link_lower for x in [
+            "youtube", "reddit", "review", "watch", "google.com/search"
+        ]):
             continue
         price = None
         rating = 0
@@ -27,7 +29,8 @@ def search_products(image_url: str):
                 "q": title,
                 "api_key": SERP_API_KEY,
                 "gl": "in",
-                "hl": "en"
+                "hl": "en",
+                "num": 5
             }
             shop_res = requests.get(url, params=shop_params).json()
             if shop_res.get("shopping_results"):
@@ -50,17 +53,41 @@ def search_products_text(query: str):
         "q": query,
         "api_key": SERP_API_KEY,
         "gl": "in",
-        "hl": "en"
+        "hl": "en",
+        "num": 5
     }
     response = requests.get(url, params=params)
     data = response.json()
     products = []
-    for item in data.get("shopping_results", [])[:5]:
+    for item in data.get("shopping_results", []):
+        link = item.get("link") or item.get("product_link")
+        if not link:
+            continue
         products.append({
             "title": item.get("title"),
-            "link": item.get("link"),
+            "link": link,
             "thumbnail": item.get("thumbnail"),
             "price": item.get("price"),
             "rating": item.get("rating", 0)
         })
+    if not products:
+        fallback_params = {
+            "engine": "google",
+            "q": query,
+            "api_key": SERP_API_KEY,
+            "gl": "in",
+            "hl": "en"
+        }
+        fallback_res = requests.get(url, params=fallback_params).json()
+        for item in fallback_res.get("organic_results", [])[:5]:
+            link = item.get("link")
+            if not link:
+                continue
+            products.append({
+                "title": item.get("title"),
+                "link": link,
+                "thumbnail": item.get("thumbnail"),
+                "price": None,
+                "rating": 0
+            })
     return products

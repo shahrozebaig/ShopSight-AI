@@ -1,47 +1,34 @@
 import { useState } from "react";
 import { sendChat } from "../services/api";
-
-export default function ChatBox({ products, setProducts, setLoading }) {
+export default function ChatBox({ setProducts, setLoading }) {
   const [query, setQuery] = useState("");
-
   const handleSend = async () => {
-    console.log("SEND CLICKED"); // debug
-
-    if (!query) return;
-
+    if (!query.trim()) return;
     try {
       setLoading(true);
-
-      const res = await sendChat(query, products);
-
-      console.log("CHAT RESPONSE:", res);
-
-      if (res.products) {
-        setProducts(res.products);
-      }
-
+      const res = await sendChat(query); 
+      if (res.products) setProducts(res.products);
     } catch (e) {
-      console.error("CHAT ERROR:", e);
+      console.error(e);
     } finally {
       setLoading(false);
       setQuery("");
     }
   };
-
   return (
-    <div className="mt-4 flex gap-2">
+    <div className="w-full bg-white shadow-md rounded-2xl p-3 flex items-center gap-3 border">
       <input
-        type="text"
-        placeholder="under 1000, rating 4..."
-        className="flex-1 border p-2 rounded"
+        className="flex-1 px-4 py-2 outline-none text-sm"
+        placeholder="Search anything... (e.g. laptop under 50000)"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && handleSend()}
       />
       <button
         onClick={handleSend}
-        className="bg-black text-white px-4 rounded"
+        className="bg-black text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition"
       >
-        Send
+        Search
       </button>
     </div>
   );

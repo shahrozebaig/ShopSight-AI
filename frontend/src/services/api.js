@@ -6,10 +6,10 @@ export const uploadImage = async (file) => {
   const res = await axios.post(`${API}/search/`, formData);
   return res.data;
 };
-export const sendChat = async (query, products) => {
+export const sendChat = async (query) => {
   const res = await axios.post(`${API}/chat/`, {
-    message: query,   
-    products
+    message: query,
+    products: []  
   });
   return res.data;
 };
