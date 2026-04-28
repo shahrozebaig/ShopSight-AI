@@ -1,5 +1,15 @@
 import requests
+import logging
 from app.core.config import SERP_API_KEY
+logger = logging.getLogger(__name__)
+def safe_get_json(url, params):
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        logger.error(f"Error fetching data from SerpApi: {e}")
+        return {}
 def search_products(image_url: str):
     url = "https://serpapi.com/search"
     params = {
@@ -7,10 +17,9 @@ def search_products(image_url: str):
         "url": image_url,
         "api_key": SERP_API_KEY
     }
-    response = requests.get(url, params=params)
-    data = response.json()
+    data = safe_get_json(url, params)
     products = []
-    for item in data.get("visual_matches", [])[:5]:   # 🔥 ONLY 5
+    for item in data.get("visual_matches", [])[:5]:
         title = item.get("title")
         link = item.get("link") or item.get("product_link")
         if not link:
@@ -32,7 +41,7 @@ def search_products(image_url: str):
                 "hl": "en",
                 "num": 5
             }
-            shop_res = requests.get(url, params=shop_params).json()
+            shop_res = safe_get_json(url, shop_params)
             if shop_res.get("shopping_results"):
                 first = shop_res["shopping_results"][0]
                 price = first.get("price")
@@ -48,46 +57,60 @@ def search_products(image_url: str):
 def search_products_text(query: str):
     url = "https://serpapi.com/search"
     params = {
-        "engine": "google",
-        "tbm": "shop",
+        "engine": "google_shopping",
         "q": query,
         "api_key": SERP_API_KEY,
         "gl": "in",
-        "hl": "en",
-        "num": 5
+        "hl": "en"
     }
-    response = requests.get(url, params=params)
-    data = response.json()
+    data = safe_get_json(url, params)
     products = []
-    for item in data.get("shopping_results", []):
+    results = data.get("shopping_results", [])
+    if not results:
+        results = data.get("inline_shopping_results", [])
+    for item in results:
         link = item.get("link") or item.get("product_link")
         if not link:
             continue
         products.append({
             "title": item.get("title"),
             "link": link,
-            "thumbnail": item.get("thumbnail"),
+            "thumbnail": item.get("thumbnail") or item.get("source_icon"),
             "price": item.get("price"),
             "rating": item.get("rating", 0)
         })
     if not products:
-        fallback_params = {
-            "engine": "google",
-            "q": query,
-            "api_key": SERP_API_KEY,
-            "gl": "in",
-            "hl": "en"
-        }
-        fallback_res = requests.get(url, params=fallback_params).json()
-        for item in fallback_res.get("organic_results", [])[:5]:
-            link = item.get("link")
+        params["engine"] = "google"
+        params["tbm"] = "shop"
+        data = safe_get_json(url, params)
+        for item in data.get("shopping_results", []):
+            link = item.get("link") or item.get("product_link")
             if not link:
                 continue
             products.append({
                 "title": item.get("title"),
                 "link": link,
                 "thumbnail": item.get("thumbnail"),
-                "price": None,
-                "rating": 0
+                "price": item.get("price"),
+                "rating": item.get("rating", 0)
+            })
+    if not products:
+        params["tbm"] = None
+        params["engine"] = "google"
+        fallback_res = safe_get_json(url, params)
+        for item in fallback_res.get("organic_results", [])[:8]:
+            link = item.get("link")
+            if not link:
+                continue
+            thumb = item.get("thumbnail")
+            if not thumb and item.get("rich_snippet"):
+                rich = item.get("rich_snippet", {})
+                thumb = rich.get("top", {}).get("thumbnail")
+            products.append({
+                "title": item.get("title"),
+                "link": link,
+                "thumbnail": thumb,
+                "price": "View Deal",
+                "rating": 4.0
             })
     return products
