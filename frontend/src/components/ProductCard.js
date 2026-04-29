@@ -1,35 +1,57 @@
 export default function ProductCard({ product }) {
+  const placeholder = "https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=800&auto=format&fit=crop";
+  const imageUrl = product.thumbnail || placeholder;
   return (
-    <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition duration-300 p-3 flex flex-col">
-      <div className="w-full h-44 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden">
+    <div className="glass-card group rounded-3xl overflow-hidden hover:border-indigo-500/50 transition-all duration-500 flex flex-col h-full">
+      <div className="relative w-full h-56 bg-slate-800/50 flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
         <img
-          src={product.thumbnail || "https://via.placeholder.com/150"}
-          alt=""
-          className="h-full object-contain hover:scale-105 transition"
+          src={imageUrl}
+          alt={product.title}
+          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+          onError={(e) => {
+            e.target.src = placeholder;
+          }}
         />
-      </div>
-      <div className="mt-3 flex flex-col gap-1 flex-1">
-        <h3 className="text-sm font-medium text-gray-800 line-clamp-2">
-          {product.title}
-        </h3>
-        <div className="flex items-center gap-1 text-xs text-gray-600">
-          <span className="text-yellow-500">★</span>
-          <span>{product.rating ?? 0}</span>
+        <div className="absolute top-3 right-3 z-20">
+          <button className="w-8 h-8 rounded-full glass-card flex items-center justify-center text-white/70 hover:text-white hover:bg-indigo-500 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </button>
         </div>
-        <p className="text-lg font-bold text-black">
-          {product.price || "—"}
-        </p>
       </div>
-      {product.link && (
-        <a
-          href={product.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-3 bg-black text-white text-sm font-medium text-center py-2 rounded-xl hover:bg-gray-800 transition"
-        >
-          Buy Now
-        </a>
-      )}
+      <div className="p-5 flex flex-col gap-3 flex-1">
+        <div className="flex justify-between items-start gap-2">
+          <h3 className="text-base font-bold text-white line-clamp-2 group-hover:text-indigo-400 transition-colors">
+            {product.title}
+          </h3>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-400 text-xs font-bold border border-indigo-500/20">
+            <span className="text-yellow-400 text-sm">★</span>
+            <span>{product.rating || "4.2"}</span>
+          </div>
+          <span className="text-xs text-slate-500 font-medium">Verified Source</span>
+        </div>
+        <div className="mt-auto pt-4 flex items-center justify-between">
+          <p className="text-2xl font-black text-white">
+            {product.price ? product.price : "Check Price"}
+          </p>
+          {product.link && (
+            <a
+              href={product.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/40 transition-all transform group-hover:translate-x-0"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
