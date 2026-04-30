@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import search, chat, voice
+from app.routes import search, chat, voice, ai_features
 import uvicorn
 app = FastAPI()
 app.add_middleware(
@@ -13,6 +13,7 @@ app.add_middleware(
 app.include_router(search.router, prefix="/search")
 app.include_router(chat.router, prefix="/chat")
 app.include_router(voice.router, prefix="/voice")
+app.include_router(ai_features.router, prefix="/ai")
 @app.get("/")
 def home():
     return {"msg": "Backend Running"}
