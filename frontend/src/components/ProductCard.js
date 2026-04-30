@@ -1,8 +1,8 @@
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, onCompare, isCompared, onSummarize }) {
   const placeholder = "https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=800&auto=format&fit=crop";
   const imageUrl = product.thumbnail || placeholder;
   return (
-    <div className="glass-card group rounded-3xl overflow-hidden hover:border-indigo-500/50 transition-all duration-500 flex flex-col h-full">
+    <div className={`glass-card group rounded-3xl overflow-hidden transition-all duration-500 flex flex-col h-full ${isCompared ? 'border-indigo-500 ring-2 ring-indigo-500/50' : 'hover:border-indigo-500/50'}`}>
       <div className="relative w-full h-56 bg-slate-800/50 flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
         <img
@@ -13,6 +13,17 @@ export default function ProductCard({ product }) {
             e.target.src = placeholder;
           }}
         />
+        <div className="absolute top-3 left-3 z-20">
+          <label className="flex items-center gap-2 cursor-pointer bg-slate-900/80 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10">
+            <input
+              type="checkbox"
+              checked={isCompared}
+              onChange={() => onCompare(product)}
+              className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-indigo-600 focus:ring-indigo-500"
+            />
+            <span className="text-[10px] font-bold text-white uppercase tracking-wider">Compare</span>
+          </label>
+        </div>
         <div className="absolute top-3 right-3 z-20">
           <button className="w-8 h-8 rounded-full glass-card flex items-center justify-center text-white/70 hover:text-white hover:bg-indigo-500 transition-all">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -32,7 +43,12 @@ export default function ProductCard({ product }) {
             <span className="text-yellow-400 text-sm">★</span>
             <span>{product.rating || "4.2"}</span>
           </div>
-          <span className="text-xs text-slate-500 font-medium">Verified Source</span>
+          <button
+            onClick={() => onSummarize(product)}
+            className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider hover:text-indigo-300 transition-colors"
+          >
+            AI Summary
+          </button>
         </div>
         <div className="mt-auto pt-4 flex items-center justify-between">
           <p className="text-2xl font-black text-white">
