@@ -37,18 +37,28 @@ def generate_description(products):
     return response.choices[0].message.content
 def compare_products(products):
     prompt = f"""
-    Compare these products side-by-side: {products}
-    Provide a concise comparison including:
-    1. Key Differences
-    2. Pros & Cons for each
-    3. Final recommendation on which one is better value.
-    Keep it professional and formatted for a clean UI.
+    Compare these products: {products}
+    Return ONLY a raw JSON string (no markdown, no code blocks, no explanation).
+    Structure:
+    {{
+      "rows": [
+        ["Price", "val1", "val2"],
+        ["Rating", "val1", "val2"],
+        ["Specs", "val1", "val2"],
+        ["Pros", "val1", "val2"],
+        ["Cons", "val1", "val2"]
+      ],
+      "verdict": "One short sentence recommendation."
+    }}
     """
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": prompt}]
     )
-    return response.choices[0].message.content
+    content = response.choices[0].message.content.strip()
+    if content.startswith("```"):
+        content = content.replace("```json", "").replace("```", "").strip()
+    return content
 def summarize_reviews(reviews):
     if not reviews:
         return "No reviews found for this product yet."
