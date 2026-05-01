@@ -1,67 +1,86 @@
-# ShopSight AI – Models & Accuracy Summary
-
-## 1. Models Used (Full History)
-
-| Model / Method            | Type          | Purpose                  | Status    | Description                                                |
-| ------------------------- | ------------- | ------------------------ | --------- | ---------------------------------------------------------- |
-| Gemini 2.5 Flash          | Vision AI     | Image → product name     | ❌ Removed | Extracted product name from image but unstable and limited |
-| OpenAI Vision             | Vision AI     | Image understanding      | ❌ Removed | Not used due to cost and unnecessary complexity            |
-| Google Lens (SerpAPI)     | Search Engine | Image → similar products | ✅ Active  | Core engine for finding products from image                |
-| Google Shopping (SerpAPI) | Search Engine | Price + rating           | ✅ Active  | Enriches results with price and rating                     |
-| Groq (LLaMA 3.1 8B)       | LLM           | Text description         | ✅ Active  | Generates short product description                        |
+# ShopSight AI – Backend Models & Processing Architecture
 
 ---
 
-## 2. Models Actually Used in Final Project
+# 1. Models Used 
 
-| Component      | Model / Method            |
-| -------------- | ------------------------- |
-| Image Search   | Google Lens (SerpAPI)     |
-| Price & Rating | Google Shopping (SerpAPI) |
-| Description    | Groq LLaMA 3.1 8B         |
-
----
-
-## 3. Rejected Models (with Pros & Cons)
-
-### Gemini Vision
-
-**Pros:**
-
-* High accuracy
-* Strong image understanding
-
-**Cons:**
-
-* Free quota very limited
-* Frequent 429 / quota errors
-* Requires API key & billing
-* Adds latency and instability
-
-**Reason removed:**
-→ Not reliable for production
+| Model / Method            | Type          | Purpose                  | Status    | Description                           |
+| ------------------------- | ------------- | ------------------------ | --------- | ------------------------------------- |
+| Gemini 2.5 Flash          | Vision AI     | Image → product name     | ❌ Removed | Unstable, quota issues, added latency |
+| OpenAI Vision             | Vision AI     | Image understanding      | ❌ Removed | High cost, unnecessary complexity     |
+| Google Lens (SerpAPI)     | Search Engine | Image → similar products | ✅ Active  | Core discovery engine                 |
+| Google Shopping (SerpAPI) | Search Engine | Price + rating           | ✅ Active  | Enrichment layer                      |
+| Groq (LLaMA 3.1 8B)       | LLM           | AI reasoning & insights  | ✅ Active  | Generates descriptions & intelligence |
 
 ---
 
-### OpenAI Vision
+# 2. Final Backend Stack
 
-**Pros:**
-
-* Very high accuracy
-* Strong reasoning
-
-**Cons:**
-
-* Paid API
-* Overkill for this use case
-* Adds latency
-
-**Reason removed:**
-→ Cost + unnecessary complexity
+| Layer             | Tool / Model          |
+| ----------------- | --------------------- |
+| Image Processing  | ImgBB                 |
+| Visual Search     | Google Lens (SerpAPI) |
+| Data Enrichment   | Google Shopping       |
+| AI Intelligence   | Groq LLaMA 3.1        |
+| Backend Framework | FastAPI               |
 
 ---
 
-## 4. ⚠️ HONEST TRUTH (VERY IMPORTANT)
+# 3. Backend Processing Flow
+
+```mermaid
+flowchart TD
+
+A[User Request] --> B{Request Type?}
+
+B -->|Image| C[Upload to ImgBB]
+C --> D[Get Image URL]
+D --> E[Call Google Lens API]
+
+E --> F{Results Found?}
+F -->|No| X[Return Empty Response]
+F -->|Yes| G[Extract Product Matches]
+
+G --> H[Link Guard Deduplication]
+H --> I[Normalize Data]
+
+I --> J[Call Google Shopping API]
+J --> K[Enrich Price & Rating]
+
+K --> L{Valid Data?}
+L -->|No| X
+L -->|Yes| M[Merge & Rank Products]
+
+M --> N[Send to AI Layer]
+N --> O{AI Enabled?}
+
+O -->|Yes| P[Generate Specs + Summary]
+O -->|No| Q[Skip AI]
+
+P --> R[Format Response]
+Q --> R
+
+R --> S[Return to Frontend]
+
+---
+
+B -->|Text Query| T[Parse Query]
+T --> U{Filter Type?}
+
+U -->|Price| V[Apply Price Filter]
+U -->|Rating| W[Apply Rating Filter]
+U -->|Category| Y[Trigger Re-search]
+U -->|Other| Z[Return All]
+
+V --> S
+W --> S
+Y --> E
+Z --> S
+```
+
+---
+
+# 4. Accuracy Reality Check
 
 | Method                       | Accuracy |
 | ---------------------------- | -------- |
@@ -70,25 +89,12 @@
 
 ---
 
-## 5. Final Accuracy of Current System
+# 5. Final System Accuracy
 
 | Component        | Accuracy |
 | ---------------- | -------- |
 | Product Matching | ~60–70%  |
 | Price Accuracy   | ~80–90%  |
 | Rating Accuracy  | ~80–90%  |
-
----
-
-## 6. Why Current Approach Was Chosen
-
-* Works 24/7 without limits
-* No API quota crashes
-* Faster response time
-* Simpler architecture
-* Fully real-time system
-
-**Trade-off:**
-→ Slightly lower accuracy compared to AI vision models
 
 ---
