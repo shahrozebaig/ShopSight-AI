@@ -11,12 +11,17 @@ export default function Dashboard({ onBack }) {
   const [comparedProducts, setComparedProducts] = useState([]);
   const [comparisonResult, setComparisonResult] = useState(null);
   const [reviewSummary, setReviewSummary] = useState(null);
+  const [notification, setNotification] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [filters, setFilters] = useState({
     priceRange: 100000,
     gender: 'all',
     brand: 'all'
   });
+  const showNotification = (msg) => {
+    setNotification(msg);
+    setTimeout(() => setNotification(null), 3000);
+  };
   const handleGlobalSearch = async (query, page = 1) => {
     try {
       setLoading(true);
@@ -27,6 +32,7 @@ export default function Dashboard({ onBack }) {
       window.scrollTo({ top: 400, behavior: 'smooth' });
     } catch (e) {
       console.error(e);
+      showNotification("SEARCH_ERROR: ENGINE_TIMEOUT");
     } finally {
       setLoading(false);
     }
@@ -51,7 +57,7 @@ export default function Dashboard({ onBack }) {
         return prev.filter(p => p.title !== product.title);
       }
       if (prev.length >= 3) {
-        alert("MAX_CAPACITY: 3_ITEMS");
+        showNotification("MAX_CAPACITY: 3_ITEMS_ONLY");
         return prev;
       }
       return [...prev, product];
@@ -66,6 +72,7 @@ export default function Dashboard({ onBack }) {
       setReviewSummary(null);
     } catch (e) {
       console.error(e);
+      showNotification("COMPARISON_ERROR: DATA_CORRUPTION");
     } finally {
       setAnalyzing(false);
     }
@@ -84,12 +91,21 @@ export default function Dashboard({ onBack }) {
       setComparisonResult(null);
     } catch (e) {
       console.error(e);
+      showNotification("SUMMARY_ERROR: AI_OFFLINE");
     } finally {
       setAnalyzing(false);
     }
   };
   return (
     <div className="min-h-screen bg-[#fffbf0] text-[#0a0a0a] selection:bg-black selection:text-white font-sans relative overflow-hidden">
+      {notification && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[1000] animate-slide-down">
+          <div className="bg-black text-white px-8 py-4 border-2 border-[#dc2626] shadow-[8px_8px_0px_0px_rgba(220,38,38,0.3)] flex items-center gap-4">
+            <div className="w-2 h-2 bg-[#dc2626] animate-ping" />
+            <span className="text-xs font-black uppercase tracking-[0.3em]">{notification}</span>
+          </div>
+        </div>
+      )}
       <div className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] bg-amber-500/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-amber-400/5 blur-[100px] rounded-full pointer-events-none" />
       <header className="heavy-header !py-4 md:!py-6 border-b border-black/5 bg-white/40 backdrop-blur-md sticky top-0 z-[100] px-6 md:px-12">
