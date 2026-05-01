@@ -1,40 +1,50 @@
 import { useState } from "react";
-import { sendChat } from "../services/api";
-export default function ChatBox({ setProducts, setLoading }) {
+import VoiceInput from "./VoiceInput";
+export default function ChatBox({ setLoading, onSearch }) {
   const [query, setQuery] = useState("");
-  const handleSend = async () => {
-    if (!query.trim()) return;
-    try {
-      setLoading(true);
-      const res = await sendChat(query);
-      if (res.products) setProducts(res.products);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+  const [interim, setInterim] = useState("");
+  const handleSend = async (overrideQuery) => {
+    const finalQuery = overrideQuery || query;
+    if (!finalQuery.trim()) return;
+    if (onSearch) {
+      onSearch(finalQuery, 1);
       setQuery("");
+      setInterim("");
     }
   };
+  const handleVoice = (text) => {
+    setQuery(text);
+    handleSend(text);
+  };
   return (
-    <div className="relative group w-full">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-300"></div>
-      <div className="relative flex items-center gap-2 glass-input p-1.5 pl-4">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
+    <div className="w-full space-y-4">
+      <div className="relative flex items-center border-4 border-black bg-[#f2f2f2] p-2 focus-within:bg-white transition-colors">
+        <div className="pl-4">
+          <svg className="w-6 h-6 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
         <input
-          className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-slate-500 py-2 text-sm md:text-base"
-          placeholder="What are you looking for today?"
-          value={query}
+          className="flex-1 bg-transparent border-none outline-none p-4 text-lg font-bold uppercase tracking-tight placeholder:text-black/20"
+          placeholder=""
+          value={interim || query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
         />
-        <button
-          onClick={handleSend}
-          className="bg-indigo-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
-        >
-          Search
-        </button>
+        <div className="flex items-center gap-2 pr-2">
+          <VoiceInput onText={handleVoice} onInterim={setInterim} />
+          <button
+            onClick={() => handleSend()}
+            className="bg-[#dc2626] text-white px-8 py-4 font-black uppercase text-xs tracking-widest hover:bg-black transition-all"
+          >
+            Execute
+          </button>
+        </div>
+        {interim && (
+          <div className="absolute -top-12 left-0 w-full bg-[#dc2626] text-white p-2 text-[10px] font-black uppercase tracking-widest animate-pulse">
+            LIVE_TRANSCRIPT: {interim}
+          </div>
+        )}
       </div>
     </div>
   );
