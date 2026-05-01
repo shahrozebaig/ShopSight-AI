@@ -51,26 +51,26 @@ def generate_description(products):
     )
     return response.choices[0].message.content
 def compare_products(products):
-    system_prompt = "You are a shopping comparison engine. You ONLY output raw, valid JSON. Never explain, never use markdown. NEVER include URLs or links."
+    system_prompt = "You are a professional product comparison engine. You ONLY output raw, valid JSON. Never explain, never use markdown. NEVER include URLs."
     user_prompt = f"""
-    Compare these products: {products}
-    Return a SINGLE JSON object with this exact structure:
+    Compare these specific products: {products}
+    
+    TASK:
+    1. Identify the product category (e.g. Smartphones, Perfumes, Apparel).
+    2. Select 5-7 most RELEVANT metrics for this category (e.g. for electronics: Battery, Processor; for beauty: Longevity, Scent Profile).
+    3. Return a SINGLE JSON object with this exact structure:
     {{
       "rows": [
-        ["Price", "val1", "val2", "val3"],
-        ["Rating", "val1", "val2", "val3"],
-        ["Key Spec", "val1", "val2", "val3"],
-        ["Description", "val1", "val2", "val3"]
+        ["Attribute_Name", "val1", "val2", "val3"],
+        ...
       ]
     }}
+    
     RULES:
-    - NEVER use the word "Pros". Use "Description" instead.
-    - Each row MUST be an array of strings. 
-    - The first element is the header (e.g. "Price").
-    - Subsequent elements are the values for each product in order.
-    - DO NOT return objects inside the rows array.
-    - DO NOT include a "verdict" or "summary".
-    - NO search links or URLs.
+    - ALWAYS include "Price" and "Rating" as the first two rows.
+    - The following 3-5 rows MUST be dynamic specs based on the products.
+    - Each row is an array where index 0 is the attribute name and indices 1+ are values for each product.
+    - DO NOT use generic placeholders like "val1". Use real data from the products or AI knowledge about these models.
     - Ensure it is ONE valid JSON object.
     """
     response = client.chat.completions.create(
