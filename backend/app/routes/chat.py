@@ -8,12 +8,20 @@ class ChatRequest(BaseModel):
     message: str
     products: Optional[list] = []
     page: Optional[int] = 1
+    gender: Optional[str] = "all"
 @router.post("/")
 async def chat(req: ChatRequest):
     user_query = req.message.lower()
+    search_query = user_query
+    if req.gender == "male":
+        search_query = f"{user_query} for men"
+    elif req.gender == "female":
+        search_query = f"{user_query} for women"
+    elif req.gender == "kids":
+        search_query = f"{user_query} for boys girls kids"
     products = req.products
-    if not products or req.page > 1:
-        products = search_products_text(user_query, page=req.page)
+    if not products or req.page > 1 or req.gender != "all":
+        products = search_products_text(search_query, page=req.page)
     filtered = []
     for p in products:
         price = p.get("price", "")
