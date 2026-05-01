@@ -6,16 +6,25 @@ export default function LandingPage({ onExplore }) {
   };
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-white selection:text-black font-sans">
-      <header className="fixed top-0 left-0 w-full z-[100] px-6 md:px-12 py-6 md:py-10 flex justify-between items-center bg-black/40 backdrop-blur-md border-b border-white/5">
-        <h1 className="text-2xl md:text-3xl anton tracking-tighter uppercase text-[#dc2626]">SHOPSIGHT AI</h1>
-        <nav className="absolute left-1/2 -translate-x-1/2 hidden lg:flex items-center gap-12">
-          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-sm font-black uppercase tracking-[0.2em] hover:text-[#dc2626] transition-colors">Hero</button>
-          <button onClick={() => scrollToSection('how-it-works')} className="text-sm font-black uppercase tracking-[0.2em] hover:text-[#dc2626] transition-colors">How_It_Works</button>
-          <button onClick={() => scrollToSection('insights')} className="text-sm font-black uppercase tracking-[0.2em] hover:text-[#dc2626] transition-colors">Product_Insights</button>
+      <header className="fixed top-0 left-0 w-full z-[100] px-12 py-8 flex justify-between items-center mix-blend-difference">
+        <h1 className="text-2xl anton tracking-tight uppercase text-[#dc2626]">SHOPSIGHT_AI</h1>
+        <nav className="flex gap-8">
+          {[
+            { label: 'Hero', action: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
+            { label: 'How_It_Works', action: () => scrollToSection('how-it-works') },
+            { label: 'Product_Insights', action: () => scrollToSection('insights') }
+          ].map((item) => (
+            <button
+              key={item.label}
+              onClick={item.action}
+              className="text-[10px] font-black uppercase tracking-[0.3em] text-white hover:text-[#dc2626] transition-colors"
+            >
+              {item.label}
+            </button>
+          ))}
         </nav>
-        <div className="w-32 hidden md:block" />
       </header>
-      <section className="relative h-screen flex items-center px-12 overflow-hidden">
+      <section className="relative h-screen flex items-center px-12 pt-24 overflow-hidden bg-black">
         <div className="absolute inset-0 z-0">
           <img
             src="/hero.png"
