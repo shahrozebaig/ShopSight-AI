@@ -44,9 +44,11 @@ export default function Dashboard({ onBack }) {
     }
     const matchesPrice = priceVal <= filters.priceRange || filters.priceRange >= 100000;
     const titleLower = p.title?.toLowerCase() || '';
+    const isFemale = titleLower.includes('women') || titleLower.includes('female') || titleLower.includes('girl') || titleLower.includes('lady') || titleLower.includes('ladies');
+    const isMale = (titleLower.includes('men') && !titleLower.includes('women')) || titleLower.includes('male') || titleLower.includes('boy') || titleLower.includes('gent') || titleLower.includes('man');
     const matchesGender = filters.gender === 'all' ||
-      (filters.gender === 'male' && (titleLower.includes('men') && !titleLower.includes('women'))) ||
-      (filters.gender === 'female' && titleLower.includes('women'));
+      (filters.gender === 'male' && isMale) ||
+      (filters.gender === 'female' && isFemale);
     const matchesBrand = filters.brand === 'all' || titleLower.includes(filters.brand.toLowerCase());
     return matchesPrice && matchesGender && matchesBrand;
   });
