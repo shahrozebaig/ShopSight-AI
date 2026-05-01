@@ -51,22 +51,26 @@ def generate_description(products):
     )
     return response.choices[0].message.content
 def compare_products(products):
-    system_prompt = "You are a shopping comparison engine. You ONLY output raw, valid JSON. Never explain, never use markdown. NEVER include URLs or links in the rows."
+    system_prompt = "You are a shopping comparison engine. You ONLY output raw, valid JSON. Never explain, never use markdown. NEVER include URLs or links."
     user_prompt = f"""
     Compare these products: {products}
-    Return a SINGLE JSON object with this structure:
+    Return a SINGLE JSON object with this exact structure:
     {{
       "rows": [
-        ["Price", "val1", "val2", ...],
-        ["Rating", "val1", "val2", ...],
-        ["Key Spec", "val1", "val2", ...],
-        ["Pros", "val1", "val2", ...]
-      ],
-      "verdict": "One sentence recommendation."
+        ["Price", "val1", "val2", "val3"],
+        ["Rating", "val1", "val2", "val3"],
+        ["Key Spec", "val1", "val2", "val3"],
+        ["Description", "val1", "val2", "val3"]
+      ]
     }}
     RULES:
+    - NEVER use the word "Pros". Use "Description" instead.
+    - Each row MUST be an array of strings. 
+    - The first element is the header (e.g. "Price").
+    - Subsequent elements are the values for each product in order.
+    - DO NOT return objects inside the rows array.
+    - DO NOT include a "verdict" or "summary".
     - NO search links or URLs.
-    - Match columns to the number of products provided.
     - Ensure it is ONE valid JSON object.
     """
     response = client.chat.completions.create(
