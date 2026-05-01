@@ -267,7 +267,7 @@ export default function Dashboard({ onBack }) {
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b-2 border-black bg-zinc-100">
-                              <th className="p-8 text-[10px] font-black uppercase tracking-[0.4em] border-r-2 border-black w-48">COMPARISON</th>
+                              <th className="p-8 text-[10px] font-black uppercase tracking-[0.4em] border-r-2 border-black w-48">AI_METRIC</th>
                               {comparedProducts.map((p, i) => (
                                 <th key={i} className="p-8 border-r-2 border-black last:border-r-0">
                                   <div className="space-y-4">
@@ -284,7 +284,7 @@ export default function Dashboard({ onBack }) {
                             {data.rows.map((row, i) => (
                               <tr key={i} className="hover:bg-zinc-50 transition-colors">
                                 <td className="p-8 text-[10px] font-black uppercase tracking-widest border-r-2 border-black bg-zinc-50">{row[0]}</td>
-                                {row.slice(1, comparedProducts.length + 1).map((cell, j) => (
+                                {row.slice(1).map((cell, j) => (
                                   <td key={j} className="p-8 text-sm font-medium tracking-tight border-r-2 border-black last:border-r-0">{cell}</td>
                                 ))}
                               </tr>
