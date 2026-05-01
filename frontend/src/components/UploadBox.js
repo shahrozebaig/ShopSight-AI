@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { uploadImage } from "../services/api";
-export default function UploadBox({ setProducts, setLoading, setDescription }) {
+export default function UploadBox({ setProducts, setLoading }) {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const handleFileChange = (e) => {
@@ -18,7 +18,6 @@ export default function UploadBox({ setProducts, setLoading, setDescription }) {
       setLoading(true);
       const data = await uploadImage(file);
       setProducts(data.results || []);
-      setDescription(data.description || "");
     } catch {
       alert("Upload failed");
     } finally {
@@ -26,43 +25,39 @@ export default function UploadBox({ setProducts, setLoading, setDescription }) {
     }
   };
   return (
-    <div className="space-y-4">
-      <label className={`relative group flex flex-col items-center justify-center border-2 border-dashed ${file ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-white/10 hover:border-white/20'} rounded-2xl p-8 cursor-pointer transition-all duration-300`}>
+    <div className="w-full h-full flex items-center gap-6 px-4">
+      <label className="flex-1 h-[80px] border-2 border-black border-dashed flex items-center justify-center cursor-pointer hover:bg-zinc-50 transition-all relative group overflow-hidden">
         {preview ? (
-          <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg">
-            <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="text-white text-sm font-bold">Change Image</span>
+          <div className="w-full h-full flex items-center gap-4 px-4 bg-white">
+            <div className="w-16 h-16 border-2 border-black flex-shrink-0">
+              <img src={preview} alt="" className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-black uppercase truncate">{file.name}</p>
+              <p className="text-[9px] opacity-40 uppercase tracking-widest">Image_Loaded</p>
+            </div>
+            <div className="absolute inset-0 bg-black/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-[9px] font-black uppercase tracking-[0.3em]">Change_File</span>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-indigo-400 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-            </div>
-            <div className="text-center">
-              <p className="text-slate-300 font-semibold">Drop image here</p>
-              <p className="text-slate-500 text-xs">PNG, JPG, WEBP up to 10MB</p>
-            </div>
+          <div className="flex items-center gap-4 text-black/40 group-hover:text-black">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Drop_Image_or_Click</span>
           </div>
         )}
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="hidden"
-        />
+        <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
       </label>
       {file && (
         <button
           onClick={handleUpload}
-          className="w-full btn-primary flex items-center justify-center gap-2"
+          className="h-[80px] px-8 bg-[#dc2626] text-white flex items-center justify-center gap-4 hover:bg-black transition-all group"
         >
-          <span>Identify & Search</span>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]">ANALYZE_IMAGE</span>
+          <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
           </svg>
         </button>
       )}
