@@ -18,11 +18,11 @@ export const getStyleRecommendations = async (preferences, products) => {
   const res = await axios.post(`${API}/ai/style-recommendations`, { preferences, products });
   return res.data;
 };
-export const sendChat = async (query, page = 1) => {
+export const sendChat = async (query, page = 1, gender = "all") => {
   const res = await axios.post(`${API}/chat/`, {
     message: query,
-    products: [],
-    page: page
+    page: page,
+    gender: gender
   });
   return res.data;
 };
