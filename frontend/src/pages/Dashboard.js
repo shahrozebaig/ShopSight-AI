@@ -2,28 +2,48 @@ import React, { useState } from 'react';
 import UploadBox from "../components/UploadBox";
 import ProductGrid from "../components/ProductGrid";
 import ChatBox from "../components/ChatBox";
-import VoiceInput from "../components/VoiceInput";
 import { sendChat, compareProducts, summarizeReviews } from "../services/api";
 export default function Dashboard({ onBack }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [description, setDescription] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastQuery, setLastQuery] = useState("");
   const [comparedProducts, setComparedProducts] = useState([]);
   const [comparisonResult, setComparisonResult] = useState(null);
   const [reviewSummary, setReviewSummary] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const handleVoiceText = async (text) => {
+  const [filters, setFilters] = useState({
+    priceRange: 100000,
+    gender: 'all',
+    brand: 'all'
+  });
+  const handleGlobalSearch = async (query, page = 1) => {
     try {
       setLoading(true);
-      const res = await sendChat(text);
+      setCurrentPage(page);
+      setLastQuery(query);
+      const res = await sendChat(query, page);
       if (res.products) setProducts(res.products);
-      if (res.response) setDescription(res.response);
+      window.scrollTo({ top: 400, behavior: 'smooth' });
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
   };
+  const filteredProducts = products.filter(p => {
+    let priceVal = 0;
+    if (p.price) {
+      priceVal = parseInt(p.price.replace(/[^0-9]/g, '')) || 0;
+    }
+    const matchesPrice = priceVal <= filters.priceRange || filters.priceRange >= 100000;
+    const titleLower = p.title?.toLowerCase() || '';
+    const matchesGender = filters.gender === 'all' ||
+      (filters.gender === 'male' && (titleLower.includes('men') && !titleLower.includes('women'))) ||
+      (filters.gender === 'female' && titleLower.includes('women'));
+    const matchesBrand = filters.brand === 'all' || titleLower.includes(filters.brand.toLowerCase());
+    return matchesPrice && matchesGender && matchesBrand;
+  });
   const handleCompare = (product) => {
     setComparedProducts(prev => {
       const isAlreadyAdded = prev.find(p => p.title === product.title);
@@ -31,7 +51,7 @@ export default function Dashboard({ onBack }) {
         return prev.filter(p => p.title !== product.title);
       }
       if (prev.length >= 3) {
-        alert("You can compare up to 3 products at a time.");
+        alert("MAX_CAPACITY: 3_ITEMS");
         return prev;
       }
       return [...prev, product];
@@ -69,192 +89,244 @@ export default function Dashboard({ onBack }) {
     }
   };
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-200">
-      <header className="fixed top-0 w-full z-50 glass-card py-4">
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onBack}
-              className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-white"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
-              <h1 className="text-lg font-bold tracking-tight text-white hidden sm:block">
-                AI Dashboard
-              </h1>
-            </div>
-          </div>
-          <div className="flex items-center gap-6">
-            {comparedProducts.length >= 2 && (
-              <button
-                onClick={runComparison}
-                disabled={analyzing}
-                className="btn-primary !py-2 !px-4 text-xs animate-bounce-slow"
-              >
-                {analyzing ? "Analyzing..." : `Compare ${comparedProducts.length} Items`}
-              </button>
-            )}
-          </div>
+    <div className="min-h-screen bg-[#fffbf0] text-[#0a0a0a] selection:bg-black selection:text-white font-sans relative overflow-hidden">
+      <div className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] bg-amber-500/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-amber-400/5 blur-[100px] rounded-full pointer-events-none" />
+      <header className="heavy-header !py-4 md:!py-6 border-b border-black/5 bg-white/40 backdrop-blur-md sticky top-0 z-[100] px-6 md:px-12">
+        <div className="flex items-center gap-4 md:gap-6">
+          <button
+            onClick={onBack}
+            className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:text-[#dc2626]"
+          >
+            <span>Back</span>
+          </button>
+          <div className="h-4 w-px bg-black/20" />
+          <h1 className="text-xl md:text-2xl anton tracking-tighter uppercase">SHOPSIGHT_DASHBOARD</h1>
         </div>
       </header>
-      <main className="pt-24 pb-20 max-w-7xl mx-auto px-6">
-        {(comparisonResult || reviewSummary) && (
-          <section className="mb-12 animate-fade-in">
-            <div className="glass-card p-8 rounded-[2rem] border-indigo-500/30 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4">
-                <button 
-                  onClick={() => { setComparisonResult(null); setReviewSummary(null); }}
-                  className="text-slate-500 hover:text-white"
+      <main className="pt-12 md:pt-24 pb-48 max-w-[1800px] mx-auto px-6 md:px-12">
+        <section className="grid lg:grid-cols-2 gap-8 mb-16">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-black translate-x-1 translate-y-1 group-hover:translate-x-2 group-hover:translate-y-2 transition-transform" />
+            <div className="relative p-4 border-2 border-black bg-white h-[100px] flex items-center justify-center">
+              <UploadBox setProducts={setProducts} setLoading={setLoading} />
+            </div>
+          </div>
+          <div className="relative group">
+            <div className="absolute inset-0 bg-black translate-x-1 translate-y-1 group-hover:translate-x-2 group-hover:translate-y-2 transition-transform" />
+            <div className="relative p-4 border-2 border-black bg-white h-[100px]">
+              <div className="h-full flex flex-col justify-center">
+                <ChatBox setProducts={setProducts} setLoading={setLoading} onSearch={handleGlobalSearch} />
+              </div>
+            </div>
+          </div>
+        </section>
+        <section className="pb-32">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 border-b-2 border-black pb-4 gap-4">
+            <h3 className="text-4xl md:text-7xl anton tracking-tighter uppercase leading-tight">AI_PRODUCT_SELECTION</h3>
+            <div className="text-[10px] font-black tracking-[0.3em] uppercase opacity-40 pb-2">
+              {filteredProducts.length} Items_Visible | PAGE_{currentPage}
+            </div>
+          </div>
+          <div className="flex flex-col lg:flex-row gap-16">
+            <aside className="w-full lg:w-64 shrink-0">
+              <div className="sticky top-32 space-y-8">
+                <div className="p-6 bg-zinc-100 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-6">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] border-b border-black/10 pb-2">Price_Range</h4>
+                  <div className="space-y-4">
+                    <div className="flex justify-between text-[9px] font-black">
+                      <span>₹500</span>
+                      <span className="text-[#dc2626]">₹{filters.priceRange.toLocaleString()}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="500"
+                      max="100000"
+                      step="500"
+                      value={filters.priceRange}
+                      onChange={(e) => setFilters(prev => ({ ...prev, priceRange: parseInt(e.target.value) }))}
+                      className="w-full h-1 bg-black/20 appearance-none cursor-pointer accent-black"
+                    />
+                  </div>
+                </div>
+                <div className="p-6 border-2 border-black bg-white space-y-6">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] border-b border-black/10 pb-2">Category</h4>
+                  <div className="flex flex-col gap-3">
+                    {['all', 'male', 'female'].map(g => (
+                      <button
+                        key={g}
+                        onClick={() => setFilters(prev => ({ ...prev, gender: g }))}
+                        className={`text-left text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3
+                          ${filters.gender === g ? 'text-[#dc2626]' : 'text-black/40 hover:text-black'}`}
+                      >
+                        <div className={`w-2.5 h-2.5 border-2 border-black ${filters.gender === g ? 'bg-black' : ''}`} />
+                        {g}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setFilters({ priceRange: 100000, gender: 'all', brand: 'all' })}
+                  className="w-full py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#dc2626] transition-all"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  Clear_Filters
                 </button>
               </div>
-              
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 flex items-center justify-center text-indigo-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
+            </aside>
+            <div className="flex-1 min-h-[800px]">
+              <ProductGrid
+                products={filteredProducts}
+                loading={loading}
+                onCompare={handleCompare}
+                comparedProducts={comparedProducts}
+                onSummarize={handleSummarize}
+              />
+              {filteredProducts.length > 0 && (
+                <div className="mt-24 flex justify-center gap-4">
+                  {[1, 2, 3, 4, 5].map(num => (
+                    <button
+                      key={num}
+                      onClick={() => handleGlobalSearch(lastQuery, num)}
+                      disabled={loading}
+                      className={`w-14 h-14 border-4 border-black font-black transition-all flex items-center justify-center
+                        ${currentPage === num
+                          ? 'bg-[#dc2626] text-white translate-x-1 translate-y-1 shadow-none'
+                          : 'bg-white text-black hover:bg-black hover:text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
+                    >
+                      {num}
+                    </button>
+                  ))}
                 </div>
-                <div>
-                  <h3 className="text-2xl font-extrabold text-white">
-                    {comparisonResult ? "AI Comparison Analysis" : "AI Review Summary"}
-                  </h3>
-                  <p className="text-slate-400 text-sm">
-                    {comparisonResult ? "Synthesized data from selected products" : `Summarized sentiment for ${reviewSummary?.title}`}
-                  </p>
-                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      </main>
+      {comparedProducts.length > 0 && (
+        <div className="fixed bottom-0 left-0 w-full z-[100] animate-slide-up">
+          <div className="bg-black text-white p-6 flex flex-col md:flex-row justify-between items-center gap-8 border-t border-white/10">
+            <div className="flex items-center gap-8">
+              <div className="flex -space-x-4">
+                {comparedProducts.map((p, i) => (
+                  <div key={i} className="w-16 h-16 border-2 border-black bg-zinc-800 overflow-hidden transition-all">
+                    <img src={p.thumbnail} alt="" className="w-full h-full object-cover" />
+                  </div>
+                ))}
               </div>
-
-              {comparisonResult ? (() => {
+              <div>
+                <p className="text-2xl anton tracking-tight uppercase">{comparedProducts.length} ITEMS_QUEUED</p>
+                <p className="text-[10px] font-black tracking-[0.4em] opacity-40 uppercase">Ready_to_Analyze</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-8">
+              <button
+                onClick={() => setComparedProducts([])}
+                className="text-[10px] font-black uppercase tracking-widest hover:line-through"
+              >
+                Clear_Queue
+              </button>
+              <button
+                onClick={runComparison}
+                disabled={comparedProducts.length < 2 || analyzing}
+                className={`px-12 py-5 text-sm font-black uppercase tracking-[0.2em] transition-all
+                  ${comparedProducts.length >= 2
+                    ? 'bg-white text-black hover:invert shadow-[8px_8px_0px_0px_rgba(255,255,255,0.2)]'
+                    : 'bg-zinc-900 text-zinc-700 cursor-not-allowed'}`}
+              >
+                {analyzing ? 'Processing...' : 'COMPARE_NOW'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {comparisonResult && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-white/90 backdrop-blur-md" onClick={() => setComparisonResult(null)} />
+          <div className="relative bg-white border-4 border-black max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-[40px_40px_0px_0px_rgba(0,0,0,0.1)] flex flex-col">
+            <div className="p-12 border-b-2 border-black flex justify-between items-center bg-black text-white">
+              <div className="space-y-1">
+                <h3 className="text-5xl anton tracking-tighter uppercase">PRODUCT_COMPARISON</h3>
+                <p className="text-[10px] font-black tracking-[0.5em] uppercase opacity-40">Direct_Sight_Analysis</p>
+              </div>
+              <button onClick={() => setComparisonResult(null)} className="hover:rotate-90 transition-transform p-2">
+                <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-12 custom-scrollbar">
+              {(() => {
                 try {
-                  const data = JSON.parse(comparisonResult);
+                  const startIdx = comparisonResult.indexOf('{');
+                  const endIdx = comparisonResult.lastIndexOf('}');
+                  if (startIdx === -1 || endIdx === -1) throw new Error("Fmt_Err");
+                  const data = JSON.parse(comparisonResult.substring(startIdx, endIdx + 1));
                   return (
-                    <div className="space-y-8">
-                      <div className="overflow-x-auto rounded-2xl border border-white/5 bg-slate-900/30">
+                    <div className="space-y-12">
+                      <div className="border-2 border-black overflow-hidden">
                         <table className="w-full text-left border-collapse">
                           <thead>
-                            <tr className="border-b border-white/5">
-                              <th className="p-6 text-indigo-400 font-black uppercase tracking-widest text-[10px]">Feature</th>
+                            <tr className="border-b-2 border-black bg-zinc-100">
+                              <th className="p-8 text-[10px] font-black uppercase tracking-[0.4em] border-r-2 border-black w-48">COMPARISON</th>
                               {comparedProducts.map((p, i) => (
-                                <th key={i} className="p-6 min-w-[200px]">
-                                  <div className="flex flex-col gap-3">
-                                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-800 border border-white/10 shadow-lg">
-                                      <img src={p.thumbnail} alt={p.title} className="w-full h-full object-cover" />
+                                <th key={i} className="p-8 border-r-2 border-black last:border-r-0">
+                                  <div className="space-y-4">
+                                    <div className="w-24 h-32 border-2 border-black overflow-hidden">
+                                      <img src={p.thumbnail} alt="" className="w-full h-full object-cover" />
                                     </div>
-                                    <span className="text-white text-[11px] font-bold line-clamp-2 leading-tight">{p.title}</span>
+                                    <h4 className="text-sm font-medium tracking-tight leading-tight">{p.title}</h4>
                                   </div>
                                 </th>
                               ))}
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-white/5">
+                          <tbody className="divide-y-2 divide-black">
                             {data.rows.map((row, i) => (
-                              <tr key={i} className="hover:bg-white/5 transition-colors">
-                                <td className="p-6 text-slate-400 text-xs font-bold uppercase tracking-wider bg-slate-900/40 border-r border-white/5">{row[0]}</td>
+                              <tr key={i} className="hover:bg-zinc-50 transition-colors">
+                                <td className="p-8 text-[10px] font-black uppercase tracking-widest border-r-2 border-black bg-zinc-50">{row[0]}</td>
                                 {row.slice(1, comparedProducts.length + 1).map((cell, j) => (
-                                  <td key={j} className="p-6 text-slate-300 text-sm leading-relaxed">{cell}</td>
+                                  <td key={j} className="p-8 text-sm font-medium tracking-tight border-r-2 border-black last:border-r-0">{cell}</td>
                                 ))}
                               </tr>
                             ))}
                           </tbody>
                         </table>
                       </div>
-                      
-                      <div className="p-6 rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
-                        <p className="text-indigo-400 text-xs font-black uppercase tracking-widest mb-2">AI Verdict</p>
-                        <p className="text-white text-lg font-medium italic">"{data.verdict}"</p>
-                      </div>
                     </div>
                   );
                 } catch (e) {
-                  return <div className="p-6 bg-slate-900/50 rounded-2xl text-slate-300 whitespace-pre-wrap">{comparisonResult}</div>;
+                  return <div className="p-12 font-mono text-xs border-2 border-black bg-zinc-100 whitespace-pre-wrap">{comparisonResult}</div>;
                 }
-              })() : (
-                <div className="bg-slate-900/50 rounded-2xl p-6 text-slate-300 whitespace-pre-wrap leading-relaxed border border-white/5">
-                  {reviewSummary?.summary}
-                </div>
-              )}
-            </div>
-          </section>
-        )}
-        <section className="mb-12">
-          <div className="grid lg:grid-cols-12 gap-8 items-start">
-            <div className="lg:col-span-5 glass-card p-8 rounded-[2rem] space-y-6">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center text-pink-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <h4 className="text-xl font-bold text-white">Visual Search</h4>
-              </div>
-              <UploadBox
-                setProducts={setProducts}
-                setLoading={setLoading}
-                setDescription={setDescription}
-              />
-            </div>
-            <div className="lg:col-span-7 glass-card p-8 rounded-[2rem] space-y-6 flex flex-col">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                  </svg>
-                </div>
-                <h4 className="text-xl font-bold text-white">Smart Concierge</h4>
-              </div>
-              <div className="flex-1 min-h-[120px]">
-                <ChatBox
-                  setProducts={setProducts}
-                  setLoading={setLoading}
-                />
-              </div>
-              <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-                <span className="text-xs text-slate-500 italic">"Find me a mechanical keyboard with RGB"</span>
-                <VoiceInput onText={handleVoiceText} />
-              </div>
+              })()}
             </div>
           </div>
-          {description && (
-            <div className="mt-8 p-6 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 animate-fade-in">
-              <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold shrink-0">AI</div>
-                <p className="text-slate-300 leading-relaxed">
-                  {description}
-                </p>
+        </div>
+      )}
+      {reviewSummary && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setReviewSummary(null)} />
+          <div className="relative bg-white border-4 border-black max-w-2xl w-full shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] p-12">
+            <div className="flex justify-between items-start mb-12">
+              <div className="space-y-1">
+                <h3 className="text-4xl anton tracking-tighter uppercase">INTELLIGENCE_REPORT</h3>
+                <p className="text-[10px] font-black tracking-[0.4em] uppercase opacity-40">{reviewSummary.title}</p>
               </div>
+              <button onClick={() => setReviewSummary(null)} className="hover:line-through text-xs font-black uppercase">Close</button>
             </div>
-          )}
-        </section>
-        <section>
-          <div className="flex justify-between items-end gap-4 mb-8">
-            <div>
-              <h3 className="text-3xl font-bold text-white">
-                Results <span className="text-gradient">Matrix</span>
-              </h3>
+            <div className="p-8 bg-zinc-100 border-l-8 border-black">
+              <p className="text-xl font-bold tracking-tight italic leading-relaxed">"{reviewSummary.summary}"</p>
+            </div>
+            <div className="mt-12 flex justify-end">
+              <button
+                onClick={() => setReviewSummary(null)}
+                className="px-12 py-4 bg-black text-white font-black text-xs uppercase tracking-widest hover:bg-zinc-800 transition-all"
+              >
+                Acknowledge
+              </button>
             </div>
           </div>
-          <div className="min-h-[400px]">
-            <ProductGrid
-              products={products}
-              loading={loading}
-              onCompare={handleCompare}
-              comparedProducts={comparedProducts}
-              onSummarize={handleSummarize}
-            />
-          </div>
-        </section>
-      </main>
+        </div>
+      )}
     </div>
   );
 }
