@@ -19,7 +19,7 @@ def search_products(image_url: str):
     }
     data = safe_get_json(url, params)
     products = []
-    for item in data.get("visual_matches", [])[:5]:
+    for item in data.get("visual_matches", [])[:12]: 
         title = item.get("title")
         link = item.get("link") or item.get("product_link")
         if not link:
@@ -54,14 +54,21 @@ def search_products(image_url: str):
             "rating": rating
         })
     return products
-def search_products_text(query: str):
+def search_products_text(query: str, page: int = 1):
     url = "https://serpapi.com/search"
+    diversified_query = query
+    if page == 2 and "men" not in query and "women" not in query:
+        diversified_query = f"{query} for men women"
+    elif page == 3:
+        diversified_query = f"{query} new arrivals"
     params = {
         "engine": "google_shopping",
-        "q": query,
+        "q": diversified_query,
         "api_key": SERP_API_KEY,
         "gl": "in",
-        "hl": "en"
+        "hl": "en",
+        "start": (page - 1) * 40, 
+        "direct_link": "true" 
     }
     data = safe_get_json(url, params)
     products = []
@@ -79,14 +86,15 @@ def search_products_text(query: str):
             "price": item.get("price"),
             "rating": item.get("rating", 0)
         })
-    if not products:
+    if len(products) < 10:
         params["engine"] = "google"
         params["tbm"] = "shop"
+        params["start"] = (page - 1) * 20 
+        params["num"] = 20
         data = safe_get_json(url, params)
         for item in data.get("shopping_results", []):
             link = item.get("link") or item.get("product_link")
-            if not link:
-                continue
+            if not link: continue
             products.append({
                 "title": item.get("title"),
                 "link": link,
@@ -97,11 +105,11 @@ def search_products_text(query: str):
     if not products:
         params["tbm"] = None
         params["engine"] = "google"
+        params["num"] = 10
         fallback_res = safe_get_json(url, params)
-        for item in fallback_res.get("organic_results", [])[:8]:
+        for item in fallback_res.get("organic_results", []):
             link = item.get("link")
-            if not link:
-                continue
+            if not link: continue
             thumb = item.get("thumbnail")
             if not thumb and item.get("rich_snippet"):
                 rich = item.get("rich_snippet", {})
