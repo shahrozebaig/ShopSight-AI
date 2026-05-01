@@ -1,17 +1,21 @@
 import React from 'react';
 export default function ProductCard({ product, onCompare, isCompared, onSummarize }) {
-  const placeholder = "https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=800&auto=format&fit=crop";
-  const imageUrl = product.thumbnail || placeholder;
+  const imageUrl = product.thumbnail;
   return (
     <div className={`brutalist-card group relative flex flex-col h-full 
       ${isCompared ? 'border-4 border-black ring-8 ring-black/5 shadow-[20px_20px_0px_0px_rgba(0,0,0,0.1)]' : ''}`}>
       <div className="relative aspect-[3/4] bg-zinc-200 overflow-hidden">
-        <img
-          src={imageUrl}
-          alt={product.title}
-          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-          onError={(e) => { e.target.src = placeholder; }}
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={product.title}
+            className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+          />
+        ) : (
+          <div className="w-full h-full bg-zinc-100 flex items-center justify-center p-8 text-center">
+            <span className="text-[10px] font-black uppercase opacity-20 tracking-tighter">IMAGE_NOT_AVAILABLE</span>
+          </div>
+        )}
         <div className="absolute top-0 right-0 z-20">
           <div className="technical-badge">
             {product.rating > 0 ? `RANK_${product.rating}` : "NEW"}
