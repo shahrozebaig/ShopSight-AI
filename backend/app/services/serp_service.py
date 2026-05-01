@@ -53,14 +53,22 @@ def search_products(image_url: str):
             "price": price,
             "rating": rating
         })
+    import random
+    random.shuffle(products)
     return products
 def search_products_text(query: str, page: int = 1):
     url = "https://serpapi.com/search"
     diversified_query = query
-    if page == 2 and "men" not in query and "women" not in query:
-        diversified_query = f"{query} for men women"
-    elif page == 3:
-        diversified_query = f"{query} new arrivals"
+    query_lower = query.lower()
+    if not any(x in query_lower for x in ["men", "women", "kids", "girl", "boy"]):
+        if page == 1:
+            diversified_query = f"{query} for men women"
+        elif page == 2:
+            diversified_query = f"{query} for girls boys"
+        else:
+            diversified_query = f"{query} unisex collection"
+    elif page > 1:
+        diversified_query = f"{query} page {page} new"
     params = {
         "engine": "google_shopping",
         "q": diversified_query,
