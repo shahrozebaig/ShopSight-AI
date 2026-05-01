@@ -3,10 +3,25 @@ from app.core.config import GROQ_API_KEY
 import json
 client = Groq(api_key=GROQ_API_KEY)
 def chat_with_ai(message: str):
+    system_prompt = """
+    You are SHOPSIGHT AI, a brutalist shopping engine. 
+    Provide advice strictly in a valid JSON object with the following structure:
+    {
+      "sections": [
+        {"category": "KEY_FEATURES", "points": ["point 1", "point 2"]},
+        {"category": "RECOMMENDATIONS", "points": ["item 1", "item 2"]},
+        {"category": "CONSIDERATIONS", "points": ["fact 1", "fact 2"]}
+      ]
+    }
+    RULES:
+    - ONLY output valid JSON.
+    - No conversational filler.
+    - Max 3 points per section.
+    """
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[
-            {"role": "system", "content": "You are a helpful shopping assistant."},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": message}
         ]
     )
@@ -36,28 +51,36 @@ def generate_description(products):
     )
     return response.choices[0].message.content
 def compare_products(products):
-    prompt = f"""
+    system_prompt = "You are a shopping comparison engine. You ONLY output raw, valid JSON. Never explain, never use markdown. NEVER include URLs or links in the rows."
+    user_prompt = f"""
     Compare these products: {products}
-    Return ONLY a raw JSON string (no markdown, no code blocks, no explanation).
-    Structure:
+    Return a SINGLE JSON object with this structure:
     {{
       "rows": [
-        ["Price", "val1", "val2"],
-        ["Rating", "val1", "val2"],
-        ["Specs", "val1", "val2"],
-        ["Pros", "val1", "val2"],
-        ["Cons", "val1", "val2"]
+        ["Price", "val1", "val2", ...],
+        ["Rating", "val1", "val2", ...],
+        ["Key Spec", "val1", "val2", ...],
+        ["Pros", "val1", "val2", ...]
       ],
-      "verdict": "One short sentence recommendation."
+      "verdict": "One sentence recommendation."
     }}
+    RULES:
+    - NO search links or URLs.
+    - Match columns to the number of products provided.
+    - Ensure it is ONE valid JSON object.
     """
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
-        messages=[{"role": "user", "content": prompt}]
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
     )
     content = response.choices[0].message.content.strip()
-    if content.startswith("```"):
-        content = content.replace("```json", "").replace("```", "").strip()
+    start = content.find('{')
+    end = content.rfind('}')
+    if start != -1 and end != -1:
+        return content[start:end+1]
     return content
 def summarize_reviews(reviews):
     if not reviews:
@@ -65,8 +88,7 @@ def summarize_reviews(reviews):
     prompt = f"""
     Summarize these customer reviews into a single paragraph highlighting:
     - Overall sentiment
-    - Common praise
-    - Common complaints
+    - Key pros and cons mentioned by users
     Reviews: {reviews}
     """
     response = client.chat.completions.create(
@@ -75,10 +97,12 @@ def summarize_reviews(reviews):
     )
     return response.choices[0].message.content
 def suggest_style(preferences, products):
+    titles = [p["title"] for p in products[:5]]
     prompt = f"""
-    Based on the user's style preferences: {preferences}
-    Recommend the best items from this list: {products}
-    Provide a brief reasoning for each recommendation.
+    User Preferences: {preferences}
+    Product Options: {titles}
+    Based on the preferences, suggest which products match best and why. 
+    Keep it concise and brutalist.
     """
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
