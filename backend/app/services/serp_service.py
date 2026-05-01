@@ -19,7 +19,7 @@ def search_products(image_url: str):
     }
     data = safe_get_json(url, params)
     products = []
-    for item in data.get("visual_matches", [])[:12]: 
+    for item in data.get("visual_matches", [])[:40]: 
         title = item.get("title")
         link = item.get("link") or item.get("product_link")
         if not link:
