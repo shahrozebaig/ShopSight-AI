@@ -236,6 +236,14 @@ export default function Dashboard({ onBack }) {
           </div>
         </section>
       </main>
+      <footer className="bg-[#0a0a0a] text-white py-24 px-12 relative overflow-hidden border-t border-black">
+        <div className="relative z-10">
+          <h4 className="text-6xl anton tracking-tighter uppercase text-[#dc2626]">SHOPSIGHT_AI</h4>
+        </div>
+        <div className="text-[30vw] anton tracking-tighter leading-[0.8] text-white/[0.02] absolute -bottom-16 left-0 whitespace-nowrap pointer-events-none">
+          SIGHT_CORE
+        </div>
+      </footer>
       {comparedProducts.length > 0 && (
         <div className="fixed bottom-0 left-0 w-full z-[100] animate-slide-up">
           <div className="bg-black text-white p-6 flex flex-col md:flex-row justify-between items-center gap-8 border-t border-white/10">
