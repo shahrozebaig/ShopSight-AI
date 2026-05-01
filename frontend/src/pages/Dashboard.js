@@ -22,14 +22,24 @@ export default function Dashboard({ onBack }) {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
   };
-  const handleGlobalSearch = async (query, page = 1) => {
+  const handleGlobalSearch = async (query, page = 1, append = false, genderOverride = null) => {
     try {
       setLoading(true);
       setCurrentPage(page);
       setLastQuery(query);
-      const res = await sendChat(query, page);
-      if (res.products) setProducts(res.products);
-      window.scrollTo({ top: 400, behavior: 'smooth' });
+      const activeGender = genderOverride || filters.gender;
+      const res = await sendChat(query, page, activeGender);
+      if (res.products) {
+        setProducts(prev => {
+          const combined = append ? [...prev, ...res.products] : res.products;
+          const uniqueMap = new Map();
+          combined.forEach(p => {
+            if (p.link && !uniqueMap.has(p.link)) uniqueMap.set(p.link, p);
+          });
+          return Array.from(uniqueMap.values());
+        });
+      }
+      if (!append) window.scrollTo({ top: 400, behavior: 'smooth' });
     } catch (e) {
       console.error(e);
       showNotification("SEARCH_ERROR: ENGINE_TIMEOUT");
@@ -44,11 +54,13 @@ export default function Dashboard({ onBack }) {
     }
     const matchesPrice = priceVal <= filters.priceRange || filters.priceRange >= 100000;
     const titleLower = p.title?.toLowerCase() || '';
-    const isFemale = titleLower.includes('women') || titleLower.includes('female') || titleLower.includes('girl') || titleLower.includes('lady') || titleLower.includes('ladies');
-    const isMale = (titleLower.includes('men') && !titleLower.includes('women')) || titleLower.includes('male') || titleLower.includes('boy') || titleLower.includes('gent') || titleLower.includes('man');
+    const isFemale = titleLower.includes('women') || titleLower.includes('female') || titleLower.includes('lady') || titleLower.includes('ladies');
+    const isMale = (titleLower.includes('men') && !titleLower.includes('women')) || titleLower.includes('male') || titleLower.includes('gent') || titleLower.includes('man');
+    const isKids = titleLower.includes('kid') || titleLower.includes('child') || titleLower.includes('boy') || titleLower.includes('girl');
     const matchesGender = filters.gender === 'all' ||
       (filters.gender === 'male' && isMale) ||
-      (filters.gender === 'female' && isFemale);
+      (filters.gender === 'female' && isFemale) ||
+      (filters.gender === 'kids' && isKids);
     const matchesBrand = filters.brand === 'all' || titleLower.includes(filters.brand.toLowerCase());
     return matchesPrice && matchesGender && matchesBrand;
   });
@@ -122,7 +134,7 @@ export default function Dashboard({ onBack }) {
           <h1 className="text-xl md:text-2xl anton tracking-tighter uppercase">SHOPSIGHT_DASHBOARD</h1>
         </div>
       </header>
-      <main className="pt-12 md:pt-24 pb-48 max-w-[1800px] mx-auto px-6 md:px-12">
+      <main className="pt-12 md:pt-24 pb-24 max-w-[1800px] mx-auto px-6 md:px-12">
         <section className="grid lg:grid-cols-2 gap-8 mb-16">
           <div className="relative group">
             <div className="absolute inset-0 bg-black translate-x-1 translate-y-1 group-hover:translate-x-2 group-hover:translate-y-2 transition-transform" />
@@ -143,7 +155,7 @@ export default function Dashboard({ onBack }) {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 border-b-2 border-black pb-4 gap-4">
             <h3 className="text-4xl md:text-7xl anton tracking-tighter uppercase leading-tight">AI_PRODUCT_SELECTION</h3>
             <div className="text-[10px] font-black tracking-[0.3em] uppercase opacity-40 pb-2">
-              {filteredProducts.length} Items_Visible | PAGE_{currentPage}
+              {filteredProducts.length} Items_Visible
             </div>
           </div>
           <div className="flex flex-col lg:flex-row gap-16">
@@ -170,10 +182,13 @@ export default function Dashboard({ onBack }) {
                 <div className="p-6 border-2 border-black bg-white space-y-6">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] border-b border-black/10 pb-2">Category</h4>
                   <div className="flex flex-col gap-3">
-                    {['all', 'male', 'female'].map(g => (
+                    {['all', 'male', 'female', 'kids'].map(g => (
                       <button
                         key={g}
-                        onClick={() => setFilters(prev => ({ ...prev, gender: g }))}
+                        onClick={() => {
+                          setFilters(prev => ({ ...prev, gender: g }));
+                          if (lastQuery) handleGlobalSearch(lastQuery, 1, false, g);
+                        }}
                         className={`text-left text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3
                           ${filters.gender === g ? 'text-[#dc2626]' : 'text-black/40 hover:text-black'}`}
                       >
@@ -191,7 +206,7 @@ export default function Dashboard({ onBack }) {
                 </button>
               </div>
             </aside>
-            <div className="flex-1 min-h-[800px]">
+            <div className="flex-1 min-h-[500px]">
               <ProductGrid
                 products={filteredProducts}
                 loading={loading}
@@ -199,21 +214,22 @@ export default function Dashboard({ onBack }) {
                 comparedProducts={comparedProducts}
                 onSummarize={handleSummarize}
               />
-              {filteredProducts.length > 0 && (
-                <div className="mt-24 flex justify-center gap-4">
-                  {[1, 2, 3, 4, 5].map(num => (
-                    <button
-                      key={num}
-                      onClick={() => handleGlobalSearch(lastQuery, num)}
-                      disabled={loading}
-                      className={`w-14 h-14 border-4 border-black font-black transition-all flex items-center justify-center
-                        ${currentPage === num
-                          ? 'bg-[#dc2626] text-white translate-x-1 translate-y-1 shadow-none'
-                          : 'bg-white text-black hover:bg-black hover:text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
-                    >
-                      {num}
-                    </button>
-                  ))}
+              {products.length > 0 && (
+                <div className="mt-16 flex justify-center">
+                  <button
+                    onClick={() => handleGlobalSearch(lastQuery, currentPage + 1, true)}
+                    disabled={loading}
+                    className="group relative inline-flex items-center gap-6 px-16 py-6 border-4 border-black bg-white hover:bg-black hover:text-white transition-all duration-300 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
+                  >
+                    <span className="text-sm font-black uppercase tracking-[0.3em]">
+                      {loading ? 'ANALYZING_MORE...' : 'LOAD_MORE_SIGHTS'}
+                    </span>
+                    {!loading && (
+                      <svg className="w-5 h-5 transition-transform group-hover:translate-x-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                      </svg>
+                    )}
+                  </button>
                 </div>
               )}
             </div>
