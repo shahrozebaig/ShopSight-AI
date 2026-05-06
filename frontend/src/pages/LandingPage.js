@@ -7,8 +7,11 @@ export default function LandingPage({ onExplore }) {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-white selection:text-black font-sans">
       <header className="fixed top-0 left-0 w-full z-[100] px-12 py-8 flex justify-between items-center mix-blend-difference">
-        <h1 className="text-2xl anton tracking-tight uppercase text-[#dc2626]">SHOPSIGHT_AI</h1>
-        <nav className="flex gap-8">
+        <div className="flex items-center gap-4">
+          <img src="/Logo.jpeg" alt="Logo" className="w-10 h-10 border-2 border-[#dc2626] object-cover" />
+          <h1 className="text-2xl anton tracking-tight uppercase text-[#dc2626]">SHOPSIGHT_AI</h1>
+        </div>
+        <nav className="flex gap-2 p-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
           {[
             { label: 'Hero', action: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
             { label: 'How_It_Works', action: () => scrollToSection('how-it-works') },
@@ -17,39 +20,39 @@ export default function LandingPage({ onExplore }) {
             <button
               key={item.label}
               onClick={item.action}
-              className="text-[10px] font-black uppercase tracking-[0.3em] text-white hover:text-[#dc2626] transition-colors"
+              className="px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-white hover:bg-[#dc2626] hover:text-white transition-all duration-300"
             >
               {item.label}
             </button>
           ))}
         </nav>
       </header>
-      <section className="relative h-screen flex items-center px-12 pt-24 overflow-hidden bg-black">
+      <section className="relative h-screen flex items-center px-12 overflow-hidden bg-black">
         <div className="absolute inset-0 z-0">
           <img
             src="/hero.png"
             alt="AI Shopping Experience"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover opacity-70"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
         </div>
-        <div className="relative z-10 max-w-5xl space-y-10 mt-20">
+        <div className="relative z-10 max-w-5xl space-y-8 md:space-y-12 mt-16 md:mt-24">
           <div className="space-y-0">
-            <h2 className="text-6xl md:text-8xl lg:text-[10vw] anton tracking-tighter leading-none uppercase flex flex-col gap-4 md:gap-8">
-              <span className="text-white">SEARCH</span>
-              <span className="text-amber-500">FIND.. SHOP</span>
-              <span className="text-[#dc2626]">SMARTER</span>
+            <h2 className="text-6xl md:text-8xl lg:text-[10vw] anton tracking-tighter leading-[0.85] uppercase flex flex-col gap-0 shadow-black drop-shadow-2xl">
+              <span className="text-white drop-shadow-lg">SEARCH</span>
+              <span className="text-amber-500 drop-shadow-lg">FIND.. SHOP</span>
+              <span className="text-[#dc2626] drop-shadow-lg">SMARTER</span>
             </h2>
-            <div className="h-6" />
-            <p className="text-base md:text-xl font-medium opacity-60 max-w-xl leading-relaxed uppercase tracking-tight">
+            <div className="h-8 md:h-10" />
+            <p className="text-sm md:text-xl font-medium opacity-90 max-w-xl leading-relaxed uppercase tracking-tight text-zinc-100">
               Upload any product image, ask anything, and get real-time results with the power of multimodal AI.
             </p>
           </div>
           <button
             onClick={onExplore}
-            className="group flex items-center gap-6 px-12 py-5 border-2 border-[#dc2626] bg-[#dc2626]/5 hover:bg-[#dc2626] transition-all duration-500"
+            className="group flex items-center gap-6 px-10 py-4 md:px-12 md:py-6 border-2 border-[#dc2626] bg-[#dc2626]/10 hover:bg-[#dc2626] transition-all duration-500 shadow-xl"
           >
-            <span className="text-xs font-black uppercase tracking-[0.2em]">Try It Now</span>
+            <span className="text-xs font-black uppercase tracking-[0.3em]">Try It Now</span>
             <svg className="w-6 h-6 transition-transform group-hover:translate-x-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
