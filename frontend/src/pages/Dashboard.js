@@ -131,7 +131,10 @@ export default function Dashboard({ onBack }) {
             <span>Back</span>
           </button>
           <div className="h-4 w-px bg-black/20" />
-          <h1 className="text-xl md:text-2xl anton tracking-tighter uppercase">SHOPSIGHT_DASHBOARD</h1>
+          <div className="flex items-center gap-3">
+            <img src="/Logo.jpeg" alt="Logo" className="w-8 h-8 border border-black object-cover" />
+            <h1 className="text-xl md:text-2xl anton tracking-tighter uppercase">SHOPSIGHT_DASHBOARD</h1>
+          </div>
         </div>
       </header>
       <main className="pt-12 md:pt-24 pb-24 max-w-[1800px] mx-auto px-6 md:px-12">
