@@ -1,5 +1,4 @@
 import { useState } from "react";
-import VoiceInput from "./VoiceInput";
 export default function ChatBox({ setLoading, onSearch }) {
   const [query, setQuery] = useState("");
   const [interim, setInterim] = useState("");
@@ -11,10 +10,6 @@ export default function ChatBox({ setLoading, onSearch }) {
       setQuery("");
       setInterim("");
     }
-  };
-  const handleVoice = (text) => {
-    setQuery(text);
-    handleSend(text);
   };
   return (
     <div className="w-full space-y-4">
@@ -32,7 +27,6 @@ export default function ChatBox({ setLoading, onSearch }) {
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
         />
         <div className="flex items-center gap-2 pr-2">
-          <VoiceInput onText={handleVoice} onInterim={setInterim} />
           <button
             onClick={() => handleSend()}
             className="bg-[#dc2626] text-white px-8 py-4 font-black uppercase text-xs tracking-widest hover:bg-black transition-all"
@@ -40,11 +34,6 @@ export default function ChatBox({ setLoading, onSearch }) {
             Execute
           </button>
         </div>
-        {interim && (
-          <div className="absolute -top-12 left-0 w-full bg-[#dc2626] text-white p-2 text-[10px] font-black uppercase tracking-widest animate-pulse">
-            LIVE_TRANSCRIPT: {interim}
-          </div>
-        )}
       </div>
     </div>
   );
